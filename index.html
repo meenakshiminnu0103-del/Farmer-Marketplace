@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FarmDirect – Farmer-to-Buyer Digital Marketplace</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2316a34a'><path d='M7 20h10M12 20V10M12 10c0-4.418-3.582-8-8-8 0 4.418 3.582 8 8 8zm0 0c0-4.418 3.582-8 8-8 0 4.418-3.582 8-8 8z'/></svg>" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            farm: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+            harvest: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              200: '#fde68a',
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+              800: '#92400e',
+              900: '#78350f',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- React 18, ReactDOM & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen selection:bg-farm-200 selection:text-farm-900">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, createContext, useContext } = React;
+
+    // --- I18N LOCALIZATION DICTIONARY ---
+    const translations = {
+      en: {
+        brandName: 'FarmDirect',
+        tagline: 'Fresh from Farms, Direct to You',
+        navMarketplace: 'Marketplace',
+        navHowItWorks: 'How It Works',
+        navFarmers: 'Farmers',
+        navHelp: 'Help & Advisory',
+        navLogin: 'Login',
+        navRegister: 'Join Platform',
+        navLogout: 'Logout',
+        navDashboard: 'Dashboard',
+        navCart: 'Cart',
+        heroTitle: 'Fresh from Farms, Direct to You.',
+        heroSubtitle: 'Empowering Indian farmers by removing intermediaries. Buy fresh harvest directly at transparent prices with guaranteed quality and fair earnings.',
+        btnExplore: 'Explore Fresh Produce',
+        btnJoinFarmer: 'Join as a Farmer',
+        howTitle: 'How FarmDirect Eliminates Middlemen',
+        filterAll: 'All Crops',
+        searchPlaceholder: 'Search tomatoes, onions, rice, mangoes, farm names...',
+        filterCategory: 'Category',
+        filterPriceRange: 'Price Range (₹)',
+        filterOrganicOnly: 'Certified Organic Only',
+        filterBulkOnly: 'Bulk Discount Available',
+        sortBy: 'Sort By',
+        moqLabel: 'Min Order',
+        indicativeMarketPrice: 'Mkt Avg',
+        addToCart: 'Add to Cart',
+        contactFarmer: 'Contact Farmer',
+        outOfStock: 'Sold Out',
+        organicBadge: 'Organic',
+        cartTitle: 'Your Fresh Harvest Cart',
+        checkoutBtn: 'Proceed to Checkout',
+        deliveryAddress: 'Delivery Address',
+        deliveryType: 'Delivery Option',
+        homeDelivery: 'Home / Business Delivery (₹50)',
+        farmerPickup: 'Self Pickup from Farm (Free)',
+        paymentMethod: 'Payment Method',
+        placeOrderBtn: 'Place Order & Reserve Stock',
+        itemTotal: 'Item Total',
+        deliveryFee: 'Delivery Fee',
+        platformFee: 'Platform Advisory Fee',
+        orderTotal: 'Total Payable',
+      },
+      hi: {
+        brandName: 'फार्म डायरेक्ट',
+        tagline: 'सीधे खेतों से, ताज़ा आपके घर',
+        navMarketplace: 'कृषि बाज़ार',
+        navHowItWorks: 'यह कैसे काम करता है',
+        navFarmers: 'किसान साथी',
+        navHelp: 'सहायता व सलाह',
+        navLogin: 'लॉग इन करें',
+        navRegister: 'जुड़ें',
+        navLogout: 'लॉग आउट',
+        navDashboard: 'डैशबोर्ड',
+        navCart: 'कार्ट',
+        heroTitle: 'सीधे खेतों से, ताज़ा आपके द्वार।',
+        heroSubtitle: 'बिचौलियों को हटाकर भारतीय किसानों को सशक्त बनाना। उचित मूल्य, ताज़ा फसल और पारदर्शी व्यापार का आधुनिक मंच।',
+        btnExplore: 'ताज़ा उपज देखें',
+        btnJoinFarmer: 'किसान के रूप में जुड़ें',
+        howTitle: 'फार्म डायरेक्ट कैसे बिचौलियों को समाप्त करता है',
+        filterAll: 'सभी फसलें',
+        searchPlaceholder: 'टमाटर, प्याज, चावल, आम, खेत का नाम खोजें...',
+        filterCategory: 'श्रेणी',
+        filterPriceRange: 'मूल्य सीमा (₹)',
+        filterOrganicOnly: 'केवल जैविक (ऑर्गेनिक)',
+        filterBulkOnly: 'थोक छूट उपलब्ध',
+        sortBy: 'क्रमबद्ध करें',
+        moqLabel: 'न्यूनतम आर्डर',
+        indicativeMarketPrice: 'बाज़ार औसत',
+        addToCart: 'कार्ट में जोड़ें',
+        contactFarmer: 'किसान से बात करें',
+        outOfStock: 'स्टॉक समाप्त',
+        organicBadge: 'जैविक',
+        cartTitle: 'आपकी ताज़ा उपज कार्ट',
+        checkoutBtn: 'चेकआउट के लिए आगे बढ़ें',
+        deliveryAddress: 'डिलीवरी का पता',
+        deliveryType: 'डिलीवरी विकल्प',
+        homeDelivery: 'घर/दुकान पर डिलीवरी (₹50)',
+        farmerPickup: 'खेत से स्वयं लें (मुफ़्त)',
+        paymentMethod: 'भुगतान का तरीका',
+        placeOrderBtn: 'आर्डर करें और स्टॉक सुरक्षित करें',
+        itemTotal: 'सामान का योग',
+        deliveryFee: 'डिलीवरी शुल्क',
+        platformFee: 'प्लेटफ़ॉर्म शुल्क',
+        orderTotal: 'कुल देय राशि',
+      },
+      te: {
+        brandName: 'ఫార్మ్‌డైరెక్ట్',
+        tagline: 'రైతుల పొలాల నుండి నేరుగా మీ ముందుకు',
+        navMarketplace: 'మార్కెట్‌ప్లేస్',
+        navHowItWorks: 'ఎలా పనిచేస్తుంది',
+        navFarmers: 'రైతు మిత్రులు',
+        navHelp: 'సహాయం & సలహాలు',
+        navLogin: 'లాగిన్',
+        navRegister: 'చేరండి',
+        navLogout: 'లాగ్ అవుట్',
+        navDashboard: 'డ్యాష్‌బోర్డ్',
+        navCart: 'కార్ట్',
+        heroTitle: 'పొలం నుండి నేరుగా, మీ ముంగిట్లోకి తాజా పంట.',
+        heroSubtitle: 'మధ్యవర్తులు లేకుండా రైతుల శ్రమకు సరైన గుర్తింపు మరియు గిట్టుబాటు ధర. వినియోగదారులకు నాణ్యమైన, తాజా వ్యవసాయ ఉత్పత్తులు.',
+        btnExplore: 'తాజా ఉత్పత్తులను చూడండి',
+        btnJoinFarmer: 'రైతుగా నమోదు చేసుకోండి',
+        howTitle: 'ఫార్మ్‌డైరెక్ట్ మధ్యవర్తులను ఎలా తొలగిస్తుంది',
+        filterAll: 'అన్ని పంటలు',
+        searchPlaceholder: 'టమాటాలు, ఉల్లిపాయలు, బియ్యం, మామిడి, రైతుల పేర్లు వెతకండి...',
+        filterCategory: 'విభాగం',
+        filterPriceRange: 'ధర పరిధి (₹)',
+        filterOrganicOnly: 'సేంద్రీయ (ఆర్గానిక్) మాత్రమే',
+        filterBulkOnly: 'బల్క్ తగ్గింపు లభ్యం',
+        sortBy: 'క్రమబద్ధీకరించు',
+        moqLabel: 'కనిష్ట ఆర్డర్',
+        indicativeMarketPrice: 'సగటు మార్కెట్ ధర',
+        addToCart: 'కార్ట్‌కు చేర్చండి',
+        contactFarmer: 'రైతును సంప్రదించండి',
+        outOfStock: 'స్టాక్ ముగిసింది',
+        organicBadge: 'సేంద్రీయ',
+        cartTitle: 'మీ తాజా పంట కార్ట్',
+        checkoutBtn: 'చెక్‌అవుట్ చేయండి',
+        deliveryAddress: 'డెలివరీ చిరునామా',
+        deliveryType: 'డెలివరీ రకం',
+        homeDelivery: 'ఇంటికి డెలివరీ (₹50)',
+        farmerPickup: 'పొలం వద్ద స్వయంగా తీసుకోవడం (ఉచితం)',
+        paymentMethod: 'చెల్లింపు పద్ధతి',
+        placeOrderBtn: 'ఆర్డర్ ధృవీకరించి స్టాక్ పొందండి',
+        itemTotal: 'వస్తువుల మొత్తం',
+        deliveryFee: 'డెలివరీ రుసుము',
+        platformFee: 'ప్లాట్‌ఫారమ్ రుసుము',
+        orderTotal: 'మొత్తం చెల్లించవలసినది',
+      }
+    };
+
+    // --- SAMPLE SEED DATA ---
+    const initialCategories = [
+      { id: 'cat-veg', category_name: 'Fresh Vegetables', description: 'Leafy greens, root veggies, peppers', count: 5 },
+      { id: 'cat-fruit', category_name: 'Seasonal Fruits', description: 'Mangoes, bananas, citrus crops', count: 1 },
+      { id: 'cat-grain', category_name: 'Grains & Cereals', description: 'Aged rice, wheat, millets', count: 1 },
+      { id: 'cat-pulse', category_name: 'Pulses & Lentils', description: 'Moong dal, toor dal, chickpeas', count: 1 },
+      { id: 'cat-spice', category_name: 'Spices & Condiments', description: 'Chillies, raw turmeric rhizomes', count: 2 },
+    ];
+
+    const initialProducts = [
+      {
+        id: 'prod-1',
+        farmer_id: 'usr-farmer-1',
+        farmer_name: 'Lakshmi Devi',
+        farm_name: 'Lakshmi Organic Farm',
+        farm_location: 'Warangal Rural, Telangana',
+        farmer_rating: 4.9,
+        farmer_verified: 'verified',
+        product_name: 'Organic Country Tomatoes (Nattu Thakkali)',
+        category_id: 'cat-veg',
+        category_name: 'Fresh Vegetables',
+        description: 'Naturally ripened, tangy desi variety harvested fresh early morning. Grown using Jeevamrutha and zero synthetic pesticides.',
+        image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80',
+        price: 30,
+        indicative_market_price: 38,
+        unit: 'kg',
+        available_quantity: 450,
+        minimum_order_quantity: 5,
+        bulk_discount_pct: 10,
+        bulk_min_qty: 50,
+        harvest_date: 'Harvested yesterday',
+        is_organic: true,
+      },
+      {
+        id: 'prod-2',
+        farmer_id: 'usr-farmer-2',
+        farmer_name: 'Rajesh Patel',
+        farm_name: 'Green Valley Farms',
+        farm_location: 'Nashik, Maharashtra',
+        farmer_rating: 4.8,
+        farmer_verified: 'verified',
+        product_name: 'Nashik Grade-A Red Onions',
+        category_id: 'cat-veg',
+        category_name: 'Fresh Vegetables',
+        description: 'Medium-to-large size, sun-cured Nashik onions with tight papery skins. Exceptional shelf life (up to 45 days).',
+        image_url: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&auto=format&fit=crop&q=80',
+        price: 25,
+        indicative_market_price: 32,
+        unit: 'kg',
+        available_quantity: 1800,
+        minimum_order_quantity: 10,
+        bulk_discount_pct: 8,
+        bulk_min_qty: 100,
+        harvest_date: 'Harvested 3 days ago',
+        is_organic: false,
+      },
+      {
+        id: 'prod-3',
+        farmer_id: 'usr-farmer-4',
+        farmer_name: 'Anand Singh',
+        farm_name: 'Village Harvest Collective',
+        farm_location: 'Mandya, Karnataka',
+        farmer_rating: 4.9,
+        farmer_verified: 'verified',
+        product_name: 'Mandya Farm Fresh Potatoes',
+        category_id: 'cat-veg',
+        category_name: 'Fresh Vegetables',
+        description: 'Clean, thin-skinned table potatoes directly from Mandya soil. Low moisture, ideal for crisp cooking and restaurants.',
+        image_url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80',
+        price: 28,
+        indicative_market_price: 34,
+        unit: 'kg',
+        available_quantity: 1200,
+        minimum_order_quantity: 10,
+        bulk_discount_pct: 7,
+        bulk_min_qty: 75,
+        harvest_date: 'Harvested 2 days ago',
+        is_organic: true,
+      },
+      {
+        id: 'prod-4',
+        farmer_id: 'usr-farmer-2',
+        farmer_name: 'Rajesh Patel',
+        farm_name: 'Green Valley Farms',
+        farm_location: 'Nashik, Maharashtra',
+        farmer_rating: 4.8,
+        farmer_verified: 'verified',
+        product_name: 'Devgad Alphonso Mangoes (GI Tagged)',
+        category_id: 'cat-fruit',
+        category_name: 'Seasonal Fruits',
+        description: 'Grass-ripened, golden-hued Alphonso mangoes with rich saffron pulp and sweet aroma. Certified zero carbide usage.',
+        image_url: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80',
+        price: 70,
+        indicative_market_price: 95,
+        unit: 'kg',
+        available_quantity: 320,
+        minimum_order_quantity: 3,
+        bulk_discount_pct: 12,
+        bulk_min_qty: 20,
+        harvest_date: 'Handpicked this morning',
+        is_organic: true,
+      },
+      {
+        id: 'prod-5',
+        farmer_id: 'usr-farmer-3',
+        farmer_name: 'Ramesh Kumar',
+        farm_name: 'Sunrise Agricultural Farm',
+        farm_location: 'Krishna Delta, Andhra Pradesh',
+        farmer_rating: 4.7,
+        farmer_verified: 'verified',
+        product_name: 'Sona Masoori Raw Rice (Aged 12 Months)',
+        category_id: 'cat-grain',
+        category_name: 'Grains & Cereals',
+        description: 'Delicate, aromatic medium-grain rice cultivated in Krishna delta alluvial soil. Naturally aged for 12 months for non-sticky fluffy cooking.',
+        image_url: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80',
+        price: 55,
+        indicative_market_price: 68,
+        unit: 'kg',
+        available_quantity: 3500,
+        minimum_order_quantity: 25,
+        bulk_discount_pct: 10,
+        bulk_min_qty: 250,
+        harvest_date: 'Aged seasonal milling',
+        is_organic: false,
+      },
+      {
+        id: 'prod-6',
+        farmer_id: 'usr-farmer-3',
+        farmer_name: 'Ramesh Kumar',
+        farm_name: 'Sunrise Agricultural Farm',
+        farm_location: 'Krishna Delta, Andhra Pradesh',
+        farmer_rating: 4.7,
+        farmer_verified: 'verified',
+        product_name: 'Guntur G4 Spicy Green Chillies',
+        category_id: 'cat-spice',
+        category_name: 'Spices & Condiments',
+        description: 'Vibrant dark green, highly pungent G4 chillies known for authentic Indian cooking spice. Hand-sorted and stem-retained.',
+        image_url: 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=600&auto=format&fit=crop&q=80',
+        price: 40,
+        indicative_market_price: 52,
+        unit: 'kg',
+        available_quantity: 240,
+        minimum_order_quantity: 2,
+        bulk_discount_pct: 10,
+        bulk_min_qty: 30,
+        harvest_date: 'Harvested yesterday',
+        is_organic: true,
+      },
+      {
+        id: 'prod-7',
+        farmer_id: 'usr-farmer-1',
+        farmer_name: 'Lakshmi Devi',
+        farm_name: 'Lakshmi Organic Farm',
+        farm_location: 'Warangal Rural, Telangana',
+        farmer_rating: 4.9,
+        farmer_verified: 'verified',
+        product_name: 'Pure Organic Lakadong Turmeric Rhizomes',
+        category_id: 'cat-spice',
+        category_name: 'Spices & Condiments',
+        description: 'Sun-dried raw turmeric rhizomes testing over 7% curcumin content. Medicinal grade harvested with natural care.',
+        image_url: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=600&auto=format&fit=crop&q=80',
+        price: 120,
+        indicative_market_price: 160,
+        unit: 'kg',
+        available_quantity: 500,
+        minimum_order_quantity: 2,
+        bulk_discount_pct: 12,
+        bulk_min_qty: 25,
+        harvest_date: 'Sun-cured harvest',
+        is_organic: true,
+      },
+      {
+        id: 'prod-8',
+        farmer_id: 'usr-farmer-4',
+        farmer_name: 'Anand Singh',
+        farm_name: 'Village Harvest Collective',
+        farm_location: 'Mandya, Karnataka',
+        farmer_rating: 4.9,
+        farmer_verified: 'verified',
+        product_name: 'Traditional Moong Dal (Split Green Gram)',
+        category_id: 'cat-pulse',
+        category_name: 'Pulses & Lentils',
+        description: 'Unpolished, pesticide-free split moong dal retaining natural dietary fiber and rich earthy taste. Quick cooking.',
+        image_url: 'https://images.unsplash.com/photo-1585994192701-f1a505c817ee?w=600&auto=format&fit=crop&q=80',
+        price: 95,
+        indicative_market_price: 125,
+        unit: 'kg',
+        available_quantity: 650,
+        minimum_order_quantity: 5,
+        bulk_discount_pct: 10,
+        bulk_min_qty: 50,
+        harvest_date: 'Fresh cleaned harvest',
+        is_organic: true,
+      }
+    ];
+
+    const initialOrders = [
+      {
+        id: 'ORD-1001',
+        buyer_id: 'usr-buyer-consumer',
+        buyer_name: 'Priya Sharma',
+        buyer_phone: '+91 98110 11223',
+        farmer_id: 'usr-farmer-1',
+        farmer_name: 'Lakshmi Devi',
+        farm_name: 'Lakshmi Organic Farm',
+        farm_location: 'Warangal Rural, Telangana',
+        order_status: 'delivered',
+        subtotal: 300,
+        delivery_fee: 50,
+        platform_fee: 15,
+        total_amount: 365,
+        payment_status: 'completed',
+        payment_method: 'UPI',
+        transaction_reference: 'UPI-TXN-9847291038',
+        delivery_address: 'Flat 402, Green Meadows, Madhapur, Hyderabad, TS - 500081',
+        delivery_partner_name: 'Suresh Varma (EcoKisan)',
+        created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+        items: [
+          { product_id: 'prod-1', product_name: 'Organic Country Tomatoes (Nattu Thakkali)', unit: 'kg', quantity: 10, unit_price: 30, item_total: 300 }
+        ]
+      },
+      {
+        id: 'ORD-1002',
+        buyer_id: 'usr-buyer-consumer',
+        buyer_name: 'Priya Sharma',
+        buyer_phone: '+91 98110 11223',
+        farmer_id: 'usr-farmer-2',
+        farmer_name: 'Rajesh Patel',
+        farm_name: 'Green Valley Farms',
+        farm_location: 'Nashik, Maharashtra',
+        order_status: 'shipped',
+        subtotal: 1250,
+        delivery_fee: 50,
+        platform_fee: 15,
+        total_amount: 1315,
+        payment_status: 'completed',
+        payment_method: 'NetBanking',
+        transaction_reference: 'NEFT-AGRO-7729104',
+        delivery_address: 'Flat 402, Green Meadows, Madhapur, Hyderabad, TS - 500081',
+        delivery_partner_name: 'Suresh Varma (EcoKisan)',
+        created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+        items: [
+          { product_id: 'prod-2', product_name: 'Nashik Grade-A Red Onions', unit: 'kg', quantity: 50, unit_price: 25, item_total: 1250 }
+        ]
+      }
+    ];
+
+    const demoUsers = {
+      farmer: { id: 'usr-farmer-1', full_name: 'Lakshmi Devi', email: 'lakshmi@organicfarms.in', role: 'farmer', farm_name: 'Lakshmi Organic Farm', farm_location: 'Warangal Rural, Telangana' },
+      buyer: { id: 'usr-buyer-consumer', full_name: 'Priya Sharma', email: 'priya@gmail.com', role: 'buyer', buyer_type: 'consumer' },
+      delivery_partner: { id: 'usr-delivery-1', full_name: 'Suresh Varma', email: 'suresh@ecokisan.in', role: 'delivery_partner', vehicle: 'Refrigerated Mini Truck' },
+      admin: { id: 'usr-admin', full_name: 'Platform Administrator', email: 'admin@farmdirect.com', role: 'admin' },
+    };
+
+    // --- MAIN REACT APPLICATION ---
+    function App() {
+      const [lang, setLang] = useState('en');
+      const t = translations[lang] || translations.en;
+
+      // Current active user session
+      const [currentUser, setCurrentUser] = useState(() => {
+        const saved = localStorage.getItem('fd_user');
+        return saved ? JSON.parse(saved) : demoUsers.farmer;
+      });
+
+      // Global datasets stored in state
+      const [products, setProducts] = useState(() => {
+        const saved = localStorage.getItem('fd_products');
+        return saved ? JSON.parse(saved) : initialProducts;
+      });
+
+      const [orders, setOrders] = useState(() => {
+        const saved = localStorage.getItem('fd_orders');
+        return saved ? JSON.parse(saved) : initialOrders;
+      });
+
+      const [cart, setCart] = useState(() => {
+        const saved = localStorage.getItem('fd_cart');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      // Navigation state
+      const [page, setPage] = useState('marketplace'); // landing, marketplace, product, cart, checkout, tracking, farmer, buyer, delivery, admin, help
+      const [selectedProductId, setSelectedProductId] = useState('prod-1');
+      const [selectedOrderId, setSelectedOrderId] = useState('ORD-1002');
+      const [receiptModalOrderId, setReceiptModalOrderId] = useState(null);
+      const [messageModalData, setMessageModalData] = useState(null); // { product, farmerName }
+
+      // Marketplace filters
+      const [searchTerm, setSearchTerm] = useState('');
+      const [selectedCategory, setSelectedCategory] = useState('all');
+      const [maxPrice, setMaxPrice] = useState(150);
+      const [organicOnly, setOrganicOnly] = useState(false);
+      const [bulkOnly, setBulkOnly] = useState(false);
+      const [sortBy, setSortBy] = useState('newest');
+
+      // Sync state to LocalStorage
+      useEffect(() => {
+        localStorage.setItem('fd_user', JSON.stringify(currentUser));
+      }, [currentUser]);
+
+      useEffect(() => {
+        localStorage.setItem('fd_products', JSON.stringify(products));
+      }, [products]);
+
+      useEffect(() => {
+        localStorage.setItem('fd_orders', JSON.stringify(orders));
+      }, [orders]);
+
+      useEffect(() => {
+        localStorage.setItem('fd_cart', JSON.stringify(cart));
+      }, [cart]);
+
+      // Cart helpers
+      const addToCart = (product, qty) => {
+        const minQty = product.minimum_order_quantity || 1;
+        const addQty = qty && qty >= minQty ? qty : minQty;
+        setCart(prev => {
+          const idx = prev.findIndex(item => item.product.id === product.id);
+          if (idx > -1) {
+            const next = [...prev];
+            next[idx].quantity = Math.min(next[idx].quantity + addQty, product.available_quantity);
+            return next;
+          }
+          return [...prev, { product, quantity: Math.min(addQty, product.available_quantity) }];
+        });
+      };
+
+      const updateCartQty = (productId, newQty) => {
+        setCart(prev => prev.map(item => {
+          if (item.product.id === productId) {
+            return newQty > 0 ? { ...item, quantity: Math.min(newQty, item.product.available_quantity) } : null;
+          }
+          return item;
+        }).filter(Boolean));
+      };
+
+      const removeFromCart = (productId) => {
+        setCart(prev => prev.filter(item => item.product.id !== productId));
+      };
+
+      const cartTotals = useMemo(() => {
+        const subtotal = cart.reduce((sum, it) => {
+          let price = it.product.price;
+          if (it.product.bulk_min_qty > 0 && it.quantity >= it.product.bulk_min_qty && it.product.bulk_discount_pct > 0) {
+            price = price * (1 - it.product.bulk_discount_pct / 100);
+          }
+          return sum + (price * it.quantity);
+        }, 0);
+        const uniqueFarmers = new Set(cart.map(it => it.product.farmer_id)).size;
+        const deliveryFee = cart.length === 0 ? 0 : uniqueFarmers * 50;
+        const platformFee = cart.length === 0 ? 0 : 15;
+        const total = subtotal + deliveryFee + platformFee;
+        const count = cart.reduce((sum, it) => sum + it.quantity, 0);
+        return { subtotal, deliveryFee, platformFee, total, count, uniqueFarmers };
+      }, [cart]);
+
+      // Filtered products
+      const filteredProducts = useMemo(() => {
+        return products.filter(p => {
+          if (selectedCategory !== 'all' && p.category_id !== selectedCategory) return false;
+          if (organicOnly && !p.is_organic) return false;
+          if (bulkOnly && (!p.bulk_discount_pct || p.bulk_discount_pct <= 0)) return false;
+          if (p.price > maxPrice) return false;
+          if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            return p.product_name.toLowerCase().includes(term) ||
+                   p.description.toLowerCase().includes(term) ||
+                   p.farm_name.toLowerCase().includes(term) ||
+                   p.farm_location.toLowerCase().includes(term);
+          }
+          return true;
+        }).sort((a, b) => {
+          if (sortBy === 'price_asc') return a.price - b.price;
+          if (sortBy === 'price_desc') return b.price - a.price;
+          if (sortBy === 'rating') return (b.farmer_rating || 0) - (a.farmer_rating || 0);
+          return 0;
+        });
+      }, [products, selectedCategory, organicOnly, bulkOnly, maxPrice, searchTerm, sortBy]);
+
+      const activeProduct = products.find(p => p.id === selectedProductId) || products[0];
+      const activeOrder = orders.find(o => o.id === selectedOrderId) || orders[0];
+
+      return (
+        <div className="min-h-screen flex flex-col justify-between">
+          {/* --- TOP NAVBAR --- */}
+          <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+              {/* Logo */}
+              <div onClick={() => setPage('landing')} className="flex items-center gap-2 cursor-pointer select-none group">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-farm-700 to-farm-500 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                  🌾
+                </div>
+                <div>
+                  <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-farm-700 transition-colors">
+                    Farm<span className="text-farm-600">Direct</span>
+                  </span>
+                  <span className="block text-[10px] text-slate-400 font-semibold -mt-1 uppercase tracking-wider">
+                    {t.tagline}
+                  </span>
+                </div>
+              </div>
+
+              {/* Navigation links */}
+              <nav className="hidden md:flex items-center gap-1 text-xs font-bold text-slate-600">
+                <button
+                  onClick={() => setPage('marketplace')}
+                  className={`px-3.5 py-2 rounded-lg transition-colors ${page === 'marketplace' ? 'bg-farm-50 text-farm-700 font-extrabold' : 'hover:bg-slate-100'}`}
+                >
+                  {t.navMarketplace}
+                </button>
+                <button
+                  onClick={() => setPage('landing')}
+                  className={`px-3.5 py-2 rounded-lg transition-colors ${page === 'landing' ? 'bg-farm-50 text-farm-700 font-extrabold' : 'hover:bg-slate-100'}`}
+                >
+                  {t.navHowItWorks}
+                </button>
+                <button
+                  onClick={() => setPage('help')}
+                  className={`px-3.5 py-2 rounded-lg transition-colors ${page === 'help' ? 'bg-farm-50 text-farm-700 font-extrabold' : 'hover:bg-slate-100'}`}
+                >
+                  {t.navHelp}
+                </button>
+              </nav>
+
+              {/* Controls: Language, Role Switcher, Cart, Dashboard */}
+              <div className="flex items-center gap-2">
+                {/* Language Switcher */}
+                <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 text-xs">
+                  <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-md font-bold ${lang === 'en' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}>EN</button>
+                  <button onClick={() => setLang('hi')} className={`px-2 py-1 rounded-md font-bold ${lang === 'hi' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}>हिं</button>
+                  <button onClick={() => setLang('te')} className={`px-2 py-1 rounded-md font-bold ${lang === 'te' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}>తె</button>
+                </div>
+
+                {/* Instant Role Switcher Dropdown */}
+                <div className="relative group">
+                  <button className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs">
+                    <span>⚡ Role: <strong className="capitalize">{currentUser.role.replace('_', ' ')}</strong></span>
+                  </button>
+                  <div className="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 hidden group-hover:block z-50">
+                    <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                      Switch Demo Role
+                    </div>
+                    <button onClick={() => { setCurrentUser(demoUsers.farmer); setPage('farmer'); }} className="w-full text-left px-3 py-2 text-xs hover:bg-farm-50 text-slate-700 flex justify-between font-semibold">
+                      <span>🌾 Farmer (Lakshmi)</span>
+                      <span className="text-[10px] bg-farm-100 text-farm-800 px-1 rounded">Seller</span>
+                    </button>
+                    <button onClick={() => { setCurrentUser(demoUsers.buyer); setPage('marketplace'); }} className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 text-slate-700 flex justify-between font-semibold">
+                      <span>🛒 Buyer (Priya)</span>
+                      <span className="text-[10px] bg-blue-100 text-blue-800 px-1 rounded">Buyer</span>
+                    </button>
+                    <button onClick={() => { setCurrentUser(demoUsers.delivery_partner); setPage('delivery'); }} className="w-full text-left px-3 py-2 text-xs hover:bg-amber-50 text-slate-700 flex justify-between font-semibold">
+                      <span>🚚 Delivery (Suresh)</span>
+                      <span className="text-[10px] bg-amber-100 text-amber-800 px-1 rounded">Driver</span>
+                    </button>
+                    <button onClick={() => { setCurrentUser(demoUsers.admin); setPage('admin'); }} className="w-full text-left px-3 py-2 text-xs hover:bg-purple-50 text-slate-700 flex justify-between font-semibold">
+                      <span>🛡️ Admin (System)</span>
+                      <span className="text-[10px] bg-purple-100 text-purple-800 px-1 rounded">Admin</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Cart Button */}
+                <button
+                  onClick={() => setPage('cart')}
+                  className="relative p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Cart"
+                >
+                  <span className="text-lg">🛒</span>
+                  {cartTotals.count > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-farm-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                      {cartTotals.count}
+                    </span>
+                  )}
+                </button>
+
+                {/* Dashboard Shortcut Button */}
+                <button
+                  onClick={() => {
+                    if (currentUser.role === 'farmer') setPage('farmer');
+                    else if (currentUser.role === 'buyer') setPage('buyer');
+                    else if (currentUser.role === 'delivery_partner') setPage('delivery');
+                    else if (currentUser.role === 'admin') setPage('admin');
+                  }}
+                  className="px-3 py-1.5 bg-farm-600 hover:bg-farm-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors"
+                >
+                  Dashboard
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* --- MAIN BODY PAGE ROUTER --- */}
+          <main className="flex-1 pb-16">
+            {/* 1. LANDING PAGE */}
+            {page === 'landing' && (
+              <div className="space-y-16">
+                <section className="bg-gradient-to-b from-farm-50/80 to-slate-50 py-16 border-b border-farm-100">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                    <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-farm-100 text-farm-800 text-xs font-bold">
+                        <span>🌱 Direct Agricultural Trade Platform</span>
+                      </div>
+                      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-tight">
+                        Fresh from Farms, <br />
+                        <span className="text-farm-600">Direct to You.</span>
+                      </h1>
+                      <p className="text-sm sm:text-base text-slate-600 max-w-xl leading-relaxed mx-auto lg:mx-0">
+                        {t.heroSubtitle}
+                      </p>
+                      <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-2">
+                        <button
+                          onClick={() => setPage('marketplace')}
+                          className="px-6 py-3 bg-farm-600 hover:bg-farm-700 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                        >
+                          {t.btnExplore} →
+                        </button>
+                        <button
+                          onClick={() => { setCurrentUser(demoUsers.farmer); setPage('farmer'); }}
+                          className="px-6 py-3 bg-white border border-slate-300 text-slate-800 font-bold text-xs rounded-xl hover:bg-slate-50 transition-all"
+                        >
+                          🌾 {t.btnJoinFarmer}
+                        </button>
+                      </div>
+                      <div className="pt-6 border-t border-slate-200 grid grid-cols-3 gap-4 text-left">
+                        <div>
+                          <span className="text-2xl font-black text-farm-700 block">0%</span>
+                          <span className="text-xs text-slate-500">Brokerage Cuts</span>
+                        </div>
+                        <div>
+                          <span className="text-2xl font-black text-farm-700 block">100%</span>
+                          <span className="text-xs text-slate-500">Traceable Freshness</span>
+                        </div>
+                        <div>
+                          <span className="text-2xl font-black text-farm-700 block">24-48h</span>
+                          <span className="text-xs text-slate-500">Farm Gate Dispatch</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="lg:col-span-5">
+                      <img
+                        src="https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=800&auto=format&fit=crop&q=80"
+                        alt="Indian Farmer"
+                        className="rounded-3xl shadow-2xl border-4 border-white h-96 w-full object-cover"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* How It Works Section */}
+                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-10">
+                  <div className="max-w-xl mx-auto space-y-2">
+                    <span className="text-xs font-bold text-farm-600 uppercase tracking-widest">Supply Chain Revolution</span>
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">{t.howTitle}</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left">
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-farm-600 text-white font-extrabold flex items-center justify-center text-xs mb-3">01</div>
+                      <h4 className="font-bold text-sm text-slate-900 mb-1">Direct Harvest Listing</h4>
+                      <p className="text-xs text-slate-500">Farmers harvest daily and list crops with real quantities and fair prices.</p>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-amber-600 text-white font-extrabold flex items-center justify-center text-xs mb-3">02</div>
+                      <h4 className="font-bold text-sm text-slate-900 mb-1">Direct Order Placement</h4>
+                      <p className="text-xs text-slate-500">Consumers and restaurants order directly without mandi broker fees.</p>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-blue-600 text-white font-extrabold flex items-center justify-center text-xs mb-3">03</div>
+                      <h4 className="font-bold text-sm text-slate-900 mb-1">Climate Transit</h4>
+                      <p className="text-xs text-slate-500">Verified logistics drivers transport crops safely from farm gates.</p>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-purple-600 text-white font-extrabold flex items-center justify-center text-xs mb-3">04</div>
+                      <h4 className="font-bold text-sm text-slate-900 mb-1">100% Direct Payouts</h4>
+                      <p className="text-xs text-slate-500">The entire produce amount transfers straight to the farmer's account.</p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* 2. MARKETPLACE PAGE */}
+            {page === 'marketplace' && (
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Agricultural Marketplace</h1>
+                    <p className="text-xs text-slate-500 mt-1">Order fresh produce directly from verified farming collectives</p>
+                  </div>
+                  <div className="w-full md:w-80">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder={t.searchPlaceholder}
+                      className="w-full p-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-farm-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Pills Bar */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                  <button
+                    onClick={() => setSelectedCategory('all')}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === 'all' ? 'bg-farm-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700'}`}
+                  >
+                    {t.filterAll}
+                  </button>
+                  {initialCategories.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedCategory(c.id)}
+                      className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === c.id ? 'bg-farm-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700'}`}
+                    >
+                      {c.category_name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Main Filter & Products Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                  {/* Filter Sidebar */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-5 h-fit">
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                      <span className="font-bold text-xs text-slate-900">Filters</span>
+                      <button onClick={() => { setSearchTerm(''); setSelectedCategory('all'); setMaxPrice(150); setOrganicOnly(false); setBulkOnly(false); }} className="text-[11px] text-farm-700 font-semibold">Reset</button>
+                    </div>
+
+                    <div>
+                      <label className="flex justify-between text-xs font-bold text-slate-800 mb-1.5">
+                        <span>Max Price</span>
+                        <span className="text-farm-700">₹{maxPrice}/unit</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="10"
+                        max="200"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(Number(e.target.value))}
+                        className="w-full accent-farm-600"
+                      />
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
+                      <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+                        <input type="checkbox" checked={organicOnly} onChange={(e) => setOrganicOnly(e.target.checked)} className="rounded text-farm-600" />
+                        <span>🌱 {t.filterOrganicOnly}</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+                        <input type="checkbox" checked={bulkOnly} onChange={(e) => setBulkOnly(e.target.checked)} className="rounded text-farm-600" />
+                        <span>📦 {t.filterBulkOnly}</span>
+                      </label>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100">
+                      <label className="block text-xs font-bold text-slate-800 mb-1">Sort Results</label>
+                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white">
+                        <option value="newest">Newest Harvest</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="rating">Farmer Rating</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Products Grid */}
+                  <div className="lg:col-span-3">
+                    <span className="text-xs font-bold text-slate-500 block mb-4">
+                      Showing {filteredProducts.length} farm fresh listings
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredProducts.map(p => (
+                        <div key={p.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between">
+                          <div className="relative h-44 cursor-pointer" onClick={() => { setSelectedProductId(p.id); setPage('product'); }}>
+                            <img src={p.image_url} alt={p.product_name} className="w-full h-full object-cover" />
+                            {p.is_organic && (
+                              <span className="absolute top-2 left-2 bg-farm-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                                Organic
+                              </span>
+                            )}
+                            {p.indicative_market_price && (
+                              <span className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                                Save {Math.round(((p.indicative_market_price - p.price) / p.indicative_market_price) * 100)}%
+                              </span>
+                            )}
+                            <span className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-[10px] px-2 py-0.5 rounded">
+                              {p.harvest_date}
+                            </span>
+                          </div>
+
+                          <div className="p-4 flex-1 flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1 font-semibold">
+                                <span className="text-farm-800 truncate">{p.farm_name}</span>
+                                <span className="text-amber-600 font-bold">★ {p.farmer_rating}</span>
+                              </div>
+                              <h3
+                                onClick={() => { setSelectedProductId(p.id); setPage('product'); }}
+                                className="font-bold text-slate-900 text-sm hover:text-farm-700 cursor-pointer line-clamp-1"
+                              >
+                                {p.product_name}
+                              </h3>
+                              <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-relaxed">
+                                {p.description}
+                              </p>
+                            </div>
+
+                            <div className="mt-4 pt-3 border-t border-slate-100">
+                              <div className="flex items-baseline justify-between mb-2">
+                                <div>
+                                  <span className="text-xl font-black text-slate-900">₹{p.price}</span>
+                                  <span className="text-xs text-slate-500 font-medium">/{p.unit}</span>
+                                </div>
+                                <span className="text-[11px] text-slate-400">Stock: {p.available_quantity} {p.unit}</span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+                                <button
+                                  onClick={() => setMessageModalData({ product: p, farmerName: p.farm_name })}
+                                  className="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl"
+                                >
+                                  💬 Contact
+                                </button>
+                                <button
+                                  onClick={() => addToCart(p)}
+                                  className="py-2 bg-farm-600 hover:bg-farm-700 text-white rounded-xl shadow-xs"
+                                >
+                                  + Add (MOQ: {p.minimum_order_quantity})
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. PRODUCT DETAIL VIEW */}
+            {page === 'product' && (
+              <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+                <button onClick={() => setPage('marketplace')} className="text-xs font-bold text-slate-600 hover:text-farm-700">
+                  ← Back to Marketplace
+                </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="rounded-3xl overflow-hidden bg-slate-100 h-96">
+                    <img src={activeProduct.image_url} alt={activeProduct.product_name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="space-y-4">
+                    <span className="bg-farm-50 text-farm-800 text-xs font-bold px-2.5 py-1 rounded-md">{activeProduct.category_name}</span>
+                    <h1 className="text-3xl font-black text-slate-900">{activeProduct.product_name}</h1>
+                    <div className="p-3 bg-slate-50 rounded-xl text-xs flex justify-between items-center">
+                      <div>
+                        <span className="font-bold text-slate-800 block">{activeProduct.farm_name}</span>
+                        <span className="text-slate-500">{activeProduct.farm_location}</span>
+                      </div>
+                      <span className="font-bold text-amber-600">★ {activeProduct.farmer_rating} (Verified Producer)</span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">{activeProduct.description}</p>
+                    <div className="p-4 bg-gradient-to-r from-farm-50 to-amber-50 rounded-2xl border border-farm-200">
+                      <div className="flex items-baseline justify-between">
+                        <div>
+                          <span className="text-3xl font-black text-slate-900">₹{activeProduct.price}</span>
+                          <span className="text-xs text-slate-500 ml-1">per {activeProduct.unit}</span>
+                        </div>
+                        {activeProduct.indicative_market_price && (
+                          <div className="text-right text-xs">
+                            <span className="line-through text-slate-400 block">Retail Mandi: ₹{activeProduct.indicative_market_price}/{activeProduct.unit}</span>
+                            <span className="text-farm-700 font-bold">You Save: ₹{activeProduct.indicative_market_price - activeProduct.price}/{activeProduct.unit}</span>
+                          </div>
+                        )}
+                      </div>
+                      {activeProduct.bulk_discount_pct > 0 && (
+                        <div className="mt-3 text-xs font-semibold text-farm-800 pt-2 border-t border-farm-200">
+                          Bulk Tier: {activeProduct.bulk_discount_pct}% Off on orders above {activeProduct.bulk_min_qty} {activeProduct.unit}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        onClick={() => { addToCart(activeProduct); setPage('cart'); }}
+                        className="flex-1 py-3 bg-farm-600 hover:bg-farm-700 text-white font-bold rounded-xl text-xs shadow-md"
+                      >
+                        Add to Cart & Checkout (MOQ: {activeProduct.minimum_order_quantity} {activeProduct.unit})
+                      </button>
+                      <button
+                        onClick={() => setMessageModalData({ product: activeProduct, farmerName: activeProduct.farm_name })}
+                        className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+                      >
+                        💬 Negotiate / Inquire
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 4. CART PAGE */}
+            {page === 'cart' && (
+              <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+                <h1 className="text-2xl font-black text-slate-900">{t.cartTitle} ({cartTotals.count} items)</h1>
+                {cart.length === 0 ? (
+                  <div className="p-16 text-center bg-white rounded-3xl border border-slate-200 text-xs text-slate-400 space-y-3">
+                    <p>Your cart is empty.</p>
+                    <button onClick={() => setPage('marketplace')} className="px-5 py-2 bg-farm-600 text-white font-bold rounded-xl text-xs">
+                      Explore Farm Produce
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div className="lg:col-span-8 space-y-3">
+                      {cart.map(item => (
+                        <div key={item.product.id} className="p-4 bg-white rounded-2xl border border-slate-200 flex items-center justify-between gap-4 text-xs">
+                          <img src={item.product.image_url} alt={item.product.product_name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+                          <div className="flex-1">
+                            <h4 className="font-bold text-slate-900">{item.product.product_name}</h4>
+                            <span className="text-[11px] text-slate-500 block">{item.product.farm_name}</span>
+                            <span className="font-black text-slate-900 mt-1 block">₹{item.product.price}/{item.product.unit}</span>
+                          </div>
+                          <div className="flex items-center gap-2 border border-slate-200 rounded-lg p-1 bg-slate-50">
+                            <button onClick={() => updateCartQty(item.product.id, item.quantity - 1)} className="w-6 h-6 font-bold hover:bg-white rounded">-</button>
+                            <span className="w-8 text-center font-bold">{item.quantity}</span>
+                            <button onClick={() => updateCartQty(item.product.id, item.quantity + 1)} className="w-6 h-6 font-bold hover:bg-white rounded">+</button>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-black text-slate-900 text-sm block">₹{(item.product.price * item.quantity).toFixed(2)}</span>
+                            <button onClick={() => removeFromCart(item.product.id)} className="text-red-500 text-[10px] hover:underline font-bold">Remove</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="lg:col-span-4 bg-white p-6 rounded-3xl border border-slate-200 space-y-4">
+                      <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-2">Order Settlement</h3>
+                      <div className="space-y-2 text-xs text-slate-600">
+                        <div className="flex justify-between"><span>Produce Subtotal:</span><span className="font-bold text-slate-900">₹{cartTotals.subtotal.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span>Direct Farm Freight:</span><span className="font-bold text-slate-900">₹{cartTotals.deliveryFee.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span>Platform Advisory Fee:</span><span className="font-bold text-slate-900">₹{cartTotals.platformFee.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-200">
+                          <span>Total Payable:</span><span className="text-farm-700">₹{cartTotals.total.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <button onClick={() => setPage('checkout')} className="w-full py-3 bg-farm-600 hover:bg-farm-700 text-white font-bold text-xs rounded-xl shadow-md">
+                        Proceed to Checkout →
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 5. CHECKOUT PAGE */}
+            {page === 'checkout' && (
+              <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+                <button onClick={() => setPage('cart')} className="text-xs font-bold text-slate-600 hover:text-farm-700">← Back to Cart</button>
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 space-y-6">
+                  <h1 className="text-2xl font-black text-slate-900">Direct Checkout & Confirmation</h1>
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Delivery Address</label>
+                      <textarea rows={2} defaultValue="Flat 402, Green Meadows, Madhapur, Hyderabad, TS - 500081" className="w-full p-2.5 border border-slate-300 rounded-xl" />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-2">Payment Sandbox Method</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <span className="p-2.5 rounded-xl border border-farm-600 bg-farm-50 text-farm-800 font-bold text-center">📱 UPI Fast Pay</span>
+                        <span className="p-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-center">💳 Debit / Card</span>
+                        <span className="p-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-center">🏦 Net Banking</span>
+                        <span className="p-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-center">💵 Cash on Delivery</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-farm-50 rounded-xl text-farm-900 text-xs">
+                      🔒 Stock will be atomically deducted and reserved from the farmer's listing immediately.
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+                        const newOrder = {
+                          id: newId,
+                          buyer_id: currentUser.id,
+                          buyer_name: currentUser.full_name,
+                          farmer_id: 'usr-farmer-1',
+                          farmer_name: 'Lakshmi Devi',
+                          farm_name: 'Lakshmi Organic Farm',
+                          farm_location: 'Warangal Rural, Telangana',
+                          order_status: 'confirmed',
+                          subtotal: cartTotals.subtotal,
+                          delivery_fee: cartTotals.deliveryFee,
+                          platform_fee: cartTotals.platformFee,
+                          total_amount: cartTotals.total,
+                          payment_status: 'completed',
+                          payment_method: 'UPI',
+                          transaction_reference: 'UPI-TXN-' + Math.floor(100000000 + Math.random() * 900000000),
+                          delivery_address: 'Flat 402, Green Meadows, Madhapur, Hyderabad, TS',
+                          created_at: new Date().toISOString(),
+                          items: cart.map(it => ({ product_id: it.product.id, product_name: it.product.product_name, unit: it.product.unit, quantity: it.quantity, unit_price: it.product.price, item_total: it.quantity * it.product.price }))
+                        };
+                        setOrders([newOrder, ...orders]);
+                        setCart([]);
+                        setSelectedOrderId(newId);
+                        setPage('tracking');
+                      }}
+                      className="w-full py-3.5 bg-farm-600 hover:bg-farm-700 text-white font-bold text-sm rounded-xl shadow-lg"
+                    >
+                      Confirm Order & Pay ₹{cartTotals.total.toFixed(2)} →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 6. ORDER TRACKING PAGE */}
+            {page === 'tracking' && (
+              <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+                <button onClick={() => setPage('buyer')} className="text-xs font-bold text-slate-600 hover:text-farm-700">← Back to Orders</button>
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div>
+                      <h1 className="text-2xl font-black text-slate-900">Order #{activeOrder.id}</h1>
+                      <span className="text-xs text-slate-400">Placed on {new Date(activeOrder.created_at).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-farm-100 text-farm-800">
+                        {activeOrder.order_status}
+                      </span>
+                      <button onClick={() => setReceiptModalOrderId(activeOrder.id)} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">
+                        📄 Receipt
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 p-3.5 rounded-xl border border-amber-200 text-xs text-amber-900">
+                    ℹ️ <strong>Milestone Tracking:</strong> Harvest, logistics pickup, transit, and handover timestamps are verified directly by farm participants.
+                  </div>
+
+                  {/* Stepper */}
+                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 pt-2">
+                    {['Order Placed', 'Harvest & Crated', 'Logistics Pickup', 'In Transit', 'Delivered'].map((step, idx) => (
+                      <div key={idx} className="flex sm:flex-col items-center gap-2 text-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${idx <= 3 ? 'bg-farm-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                          {idx <= 3 ? '✓' : idx + 1}
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{step}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Itemized */}
+                  <div className="pt-4 border-t border-slate-100 space-y-2 text-xs">
+                    <span className="font-bold text-slate-900 block">Consignment Contents:</span>
+                    {activeOrder.items?.map((it, i) => (
+                      <div key={i} className="flex justify-between text-slate-600 py-1">
+                        <span>{it.product_name} ({it.quantity} {it.unit})</span>
+                        <span className="font-bold text-slate-900">₹{it.item_total}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between font-black text-slate-900 pt-2 border-t border-slate-100 text-sm">
+                      <span>Total Paid:</span>
+                      <span className="text-farm-700">₹{activeOrder.total_amount}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 7. FARMER DASHBOARD */}
+            {page === 'farmer' && (
+              <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+                <div className="bg-gradient-to-r from-farm-900 to-farm-800 text-white p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h1 className="text-2xl font-black">Lakshmi Organic Farm Dashboard</h1>
+                    <p className="text-xs text-farm-200 mt-1">Direct Farmer Sales Center • Warangal Rural, Telangana</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const newProd = {
+                        id: 'prod-' + Date.now(),
+                        farmer_id: currentUser.id,
+                        farmer_name: currentUser.full_name,
+                        farm_name: 'Lakshmi Organic Farm',
+                        farm_location: 'Warangal Rural, Telangana',
+                        farmer_rating: 4.9,
+                        product_name: 'Desi Tender Bhindi (Okra)',
+                        category_id: 'cat-veg',
+                        category_name: 'Fresh Vegetables',
+                        description: 'Crisp green organic okra picked before sunrise. Tender texture with natural flavor.',
+                        image_url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop&q=80',
+                        price: 35,
+                        unit: 'kg',
+                        available_quantity: 250,
+                        minimum_order_quantity: 5,
+                        bulk_discount_pct: 10,
+                        bulk_min_qty: 30,
+                        harvest_date: 'Morning pick',
+                        is_organic: true,
+                      };
+                      setProducts([newProd, ...products]);
+                      alert('New crop listing added to live marketplace!');
+                    }}
+                    className="px-4 py-2.5 bg-white text-farm-900 font-extrabold text-xs rounded-xl shadow-xs"
+                  >
+                    + Add New Harvest Crop
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Active Listings</span>
+                    <span className="text-2xl font-black text-slate-900">{products.filter(p => p.farmer_id === currentUser.id).length}</span>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Total Orders</span>
+                    <span className="text-2xl font-black text-slate-900">{orders.length}</span>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                    <span className="text-[10px] font-bold text-farm-700 uppercase block mb-1">Total Revenue</span>
+                    <span className="text-2xl font-black text-farm-700">₹{orders.reduce((s, o) => s + o.total_amount, 0)}</span>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                    <span className="text-[10px] font-bold text-amber-600 uppercase block mb-1">Farmer Rating</span>
+                    <span className="text-2xl font-black text-amber-600">★ 4.9</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+                  <h3 className="font-bold text-slate-900 text-sm">Active Orders to Fulfill</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                          <th className="py-2">Order ID</th>
+                          <th className="py-2">Buyer</th>
+                          <th className="py-2">Amount</th>
+                          <th className="py-2">Status</th>
+                          <th className="py-2 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {orders.map(o => (
+                          <tr key={o.id}>
+                            <td className="py-2.5 font-mono font-bold text-slate-900">#{o.id}</td>
+                            <td className="py-2.5">{o.buyer_name}</td>
+                            <td className="py-2.5 font-bold">₹{o.total_amount}</td>
+                            <td className="py-2.5"><span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-farm-100 text-farm-800">{o.order_status}</span></td>
+                            <td className="py-2.5 text-right">
+                              <button onClick={() => { setSelectedOrderId(o.id); setPage('tracking'); }} className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded font-bold text-[11px]">
+                                Manage Stepper
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 8. BUYER DASHBOARD */}
+            {page === 'buyer' && (
+              <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+                <div className="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-6 sm:p-8 rounded-3xl flex justify-between items-center">
+                  <div>
+                    <h1 className="text-2xl font-black">Priya Sharma's Buyer Dashboard</h1>
+                    <p className="text-xs text-blue-200 mt-1">Direct fresh harvest orders & invoices</p>
+                  </div>
+                  <button onClick={() => setPage('marketplace')} className="px-4 py-2 bg-farm-600 text-white font-bold text-xs rounded-xl">
+                    Order Produce →
+                  </button>
+                </div>
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+                  <h3 className="font-bold text-slate-900 text-sm">Your Farm Orders</h3>
+                  <div className="space-y-3">
+                    {orders.map(o => (
+                      <div key={o.id} className="p-4 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-mono font-bold text-slate-900 block">Order #{o.id} ({o.farm_name})</span>
+                          <span className="text-slate-500">Date: {new Date(o.created_at).toLocaleDateString()} • ₹{o.total_amount}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => setReceiptModalOrderId(o.id)} className="px-3 py-1 bg-slate-100 rounded font-bold text-[11px]">
+                            Tax Receipt
+                          </button>
+                          <button onClick={() => { setSelectedOrderId(o.id); setPage('tracking'); }} className="px-3 py-1 bg-farm-600 text-white rounded font-bold text-[11px]">
+                            Track
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 9. DELIVERY DASHBOARD */}
+            {page === 'delivery' && (
+              <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+                <div className="bg-gradient-to-r from-amber-900 to-slate-900 text-white p-6 sm:p-8 rounded-3xl">
+                  <h1 className="text-2xl font-black">Logistics Partner Portal (Suresh Varma)</h1>
+                  <p className="text-xs text-amber-200 mt-1">EcoKisan Logistics • Refrigerated Mini Truck</p>
+                </div>
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+                  <h3 className="font-bold text-slate-900 text-sm">Assigned Route Manifestos</h3>
+                  <div className="space-y-3">
+                    {orders.map(o => (
+                      <div key={o.id} className="p-4 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+                        <div>
+                          <span className="font-mono font-bold text-slate-900 block">Consignment #{o.id}</span>
+                          <span className="text-slate-500 block">Pickup: {o.farm_name} ({o.farm_location})</span>
+                          <span className="text-slate-500 block">Dropoff: {o.buyer_name} ({o.delivery_address})</span>
+                        </div>
+                        <div className="space-x-2">
+                          <button
+                            onClick={() => {
+                              setOrders(orders.map(item => item.id === o.id ? { ...item, order_status: 'delivered' } : item));
+                              alert(`Order #${o.id} marked as DELIVERED to customer.`);
+                            }}
+                            className="px-3 py-1.5 bg-farm-600 text-white font-bold rounded-lg text-xs"
+                          >
+                            Mark Delivered ✓
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 10. ADMIN DASHBOARD */}
+            {page === 'admin' && (
+              <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+                <div className="bg-gradient-to-r from-purple-950 to-slate-950 text-white p-6 sm:p-8 rounded-3xl">
+                  <h1 className="text-2xl font-black">Platform Governance Dashboard</h1>
+                  <p className="text-xs text-purple-200 mt-1">Direct Market Administration & Account Moderation</p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200"><span className="text-[10px] text-slate-400 uppercase font-bold block">Farmers</span><span className="text-2xl font-black text-farm-700">4 Verified</span></div>
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200"><span className="text-[10px] text-slate-400 uppercase font-bold block">Buyers</span><span className="text-2xl font-black text-blue-700">1,240</span></div>
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200"><span className="text-[10px] text-slate-400 uppercase font-bold block">Trading Volume</span><span className="text-2xl font-black text-slate-900">₹4.8 Lakhs</span></div>
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200"><span className="text-[10px] text-slate-400 uppercase font-bold block">Disputes</span><span className="text-2xl font-black text-green-600">0 Open</span></div>
+                </div>
+              </div>
+            )}
+
+            {/* 11. HELP & ADVISORY */}
+            {page === 'help' && (
+              <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+                <div className="text-center space-y-2">
+                  <h1 className="text-3xl font-black text-slate-900">Kisan Advisory & Help Desk</h1>
+                  <p className="text-xs text-slate-500">Call Toll-Free Kisan Helpline: <strong>1800-180-1551</strong> (6 AM - 10 PM)</p>
+                </div>
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4 text-xs">
+                  <h3 className="font-bold text-slate-900 text-sm">Frequently Asked Questions</h3>
+                  <div className="space-y-3">
+                    <p className="p-3 bg-slate-50 rounded-xl"><strong>How do farmers get paid?</strong> 100% of the produce value is settled immediately upon delivered confirmation without any middlemen deductions.</p>
+                    <p className="p-3 bg-slate-50 rounded-xl"><strong>How is produce fresh?</strong> Crops are harvested hours before dispatch and transported directly without multi-day mandi storage.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* --- FOOTER --- */}
+          <footer className="bg-slate-900 text-slate-400 text-xs py-10 border-t border-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <span className="text-sm font-bold text-white block">FarmDirect – Direct Farmer-to-Buyer Marketplace</span>
+                <span>Connecting Indian Agriculture with Fair Prices & Zero Intermediaries</span>
+              </div>
+              <div className="flex gap-4">
+                <button onClick={() => setPage('marketplace')} className="hover:text-white">Marketplace</button>
+                <button onClick={() => setPage('help')} className="hover:text-white">Kisan Advisory</button>
+              </div>
+            </div>
+          </footer>
+
+          {/* --- RECEIPT MODAL --- */}
+          {receiptModalOrderId && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-xs space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-base">FarmDirect Tax Invoice</h3>
+                    <span className="text-[10px] text-slate-400">Order #{receiptModalOrderId}</span>
+                  </div>
+                  <button onClick={() => setReceiptModalOrderId(null)} className="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl space-y-1">
+                  <p><strong>Producer:</strong> Lakshmi Organic Farm (Warangal Rural)</p>
+                  <p><strong>Billed To:</strong> Priya Sharma (Hyderabad)</p>
+                  <p><strong>Status:</strong> COMPLETED & VERIFIED</p>
+                </div>
+                <div className="pt-2 border-t border-slate-100 flex justify-between font-bold">
+                  <span>Total Settled:</span>
+                  <span className="text-farm-700 font-black">₹365.00</span>
+                </div>
+                <button onClick={() => window.print()} className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl">
+                  Print Invoice
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* --- DIRECT MESSAGE MODAL --- */}
+          {messageModalData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-xs space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-slate-900 text-sm">Contact Farmer Directly</h3>
+                  <button onClick={() => setMessageModalData(null)} className="text-slate-400 font-bold">✕</button>
+                </div>
+                <p className="text-slate-500">Direct message to: <strong>{messageModalData.farmerName}</strong></p>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Proposed Negotiation Price (Optional)</label>
+                  <input type="number" placeholder="₹ per unit" className="w-full p-2 border border-slate-300 rounded-lg" />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Message</label>
+                  <textarea rows={3} placeholder="Ask about harvest schedule, bulk delivery availability..." className="w-full p-2 border border-slate-300 rounded-lg" />
+                </div>
+                <button
+                  onClick={() => {
+                    alert('Your direct message was sent to the farmer!');
+                    setMessageModalData(null);
+                  }}
+                  className="w-full py-2.5 bg-farm-600 text-white font-bold rounded-xl"
+                >
+                  Send Message
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
